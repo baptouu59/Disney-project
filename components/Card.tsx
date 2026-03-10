@@ -1,7 +1,7 @@
 // components/Card.tsx
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, View, Text } from 'react-native';
-import { DisneyCharacter } from '../services/api';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { DisneyCharacter } from '../types';
 
 export default function Card({
   character,

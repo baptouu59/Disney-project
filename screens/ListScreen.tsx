@@ -1,20 +1,11 @@
-// screens/ListScreen.tsx
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  StatusBar,
-  FlatList,
-} from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, FlatList, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../components/Card';
-import HeroBanner from '../components/HeroBanner';
-import Filters from '../components/Filters';
-import { DisneyCharacter, fetchDisneyCharacters } from '../services/api';
+import SearchBar from '../components/SearchBar';
+import { fetchDisneyCharacters } from '../services/api';
+import { DisneyCharacter } from '../types';
 
 type RootStackParamList = {
   Home: undefined;
@@ -28,28 +19,39 @@ export default function ListScreen() {
 
   const [characters, setCharacters] = useState<DisneyCharacter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const navigation = useNavigation<ListScreenNavigationProp>();
 
-  const scrollViewRef = useRef<ScrollView | null>(null);
+  const filteredCharacters = useMemo(() => {
+    if (!searchText.trim()) return characters;
+    return characters.filter((char) =>
+      char.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [characters, searchText]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchDisneyCharacters();
-        setCharacters(data);
-      } finally {
-        setLoading(false);
-      }
+    const loadCharacters = async () => {
+      const data = await fetchDisneyCharacters(1);
+      setCharacters(data);
+      setLoading(false);
     };
     load();
   }, []);
 
-  const filtered = useMemo(() => {
-    return characters.filter((c) =>
-      c.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [characters, search]);
+  const handleLoadMore = async () => {
+    if (isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    const nextPage = page + 1;
+    const data = await fetchDisneyCharacters(nextPage);
+
+    if (data.length > 0) {
+      setCharacters((prev) => [...prev, ...data]);
+      setPage(nextPage);
+    }
+    setIsFetchingMore(false);
+  };
 
   const handleCardPress = (character: DisneyCharacter) => {
     navigation.navigate('Disneys', { character });
@@ -72,34 +74,24 @@ export default function ListScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      <ScrollView ref={scrollViewRef}>
-        <HeroBanner onSeeCharacters={scrollToMovies} />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Catalogue Disney</Text>
-
-          <Filters
-            search={search}
-            year={yearFilter}
-            onSearchChange={setSearch}
-            onYearChange={setYearFilter}
-          />
-
-          {/* GRILLE 6 PAR LIGNE */}
-          <FlatList
-            data={filtered}
-            numColumns={6} // <<< 6 PAR LIGNE
-            keyExtractor={(item) => item._id.toString()}
-            renderItem={({ item }) => (
-              <Card character={item} onPress={() => handleCardPress(item)} />
-            )}
-            scrollEnabled={false} // important pour ScrollView parent
-            contentContainerStyle={styles.grid}
-          />
-        </View>
-      </ScrollView>
+      <Text style={styles.title}>Disney Characters</Text>
+      <SearchBar value={searchText} onChangeText={setSearchText} />
+      <FlatList
+        data={characters}
+        keyExtractor={(item, index) => `${item._id}-${index}`}
+        renderItem={({ item }) => (
+          <Card character={item} onPress={() => handleCardPress(item)} />
+        )}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color="#0000ff" />
+            </View>
+          ) : null
+        }
+      />
     </View>
   );
 }
@@ -126,7 +118,8 @@ const styles = StyleSheet.create({
     color: '#F9F9F9',
     marginBottom: 20,
   },
-  grid: {
-    paddingBottom: 60,
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });
