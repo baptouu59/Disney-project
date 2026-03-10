@@ -16,13 +16,39 @@ export interface DisneyCharacter {
   url: string;
 }
 
-export const fetchDisneyCharacters = async (): Promise<DisneyCharacter[]> => {
+export interface DisneyApiResponse {
+  info?: {
+    count?: number;
+    totalPages?: number;
+    previousPage?: string | null;
+    nextPage?: string | null;
+  };
+  data: DisneyCharacter[];
+}
+
+export const fetchDisneyCharacters = async (
+  page: number = 1,
+  search: string = ''
+): Promise<DisneyApiResponse> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}`);
-    return response.data.data;
+    let url = `${API_BASE_URL}?page=${page}`;
+
+    if (search.trim() !== '') {
+      url += `&name=${encodeURIComponent(search)}`;
+    }
+
+    const response = await axios.get(url);
+
+    return {
+      info: response.data.info,
+      data: response.data.data || [],
+    };
   } catch (error) {
     console.error('Error fetching Disney characters:', error);
-    return [];
+    return {
+      info: undefined,
+      data: [],
+    };
   }
 };
 
