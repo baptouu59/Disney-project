@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ListScreen from '../screens/ListScreen';
 import DetailScreen from '../screens/DetailScreen';
-import { DisneyCharacter } from '../services/api';
+import { DisneyCharacter } from '../types';
 
 export type RootStackParamList = {
   Home: undefined;

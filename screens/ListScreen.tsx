@@ -16,16 +16,32 @@ type ListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'H
 export default function ListScreen() {
   const [characters, setCharacters] = useState<DisneyCharacter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const navigation = useNavigation<ListScreenNavigationProp>();
 
   useEffect(() => {
     const loadCharacters = async () => {
-      const data = await fetchDisneyCharacters();
+      const data = await fetchDisneyCharacters(1);
       setCharacters(data);
       setLoading(false);
     };
     loadCharacters();
   }, []);
+
+  const handleLoadMore = async () => {
+    if (isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    const nextPage = page + 1;
+    const data = await fetchDisneyCharacters(nextPage);
+
+    if (data.length > 0) {
+      setCharacters((prev) => [...prev, ...data]);
+      setPage(nextPage);
+    }
+    setIsFetchingMore(false);
+  };
 
   const handleCardPress = (character: DisneyCharacter) => {
     navigation.navigate('Disneys', { character });
@@ -44,10 +60,19 @@ export default function ListScreen() {
       <Text style={styles.title}>Disney Characters</Text>
       <FlatList
         data={characters}
-        keyExtractor={(item) => item._id.toString()}
+        keyExtractor={(item, index) => `${item._id}-${index}`}
         renderItem={({ item }) => (
           <Card character={item} onPress={() => handleCardPress(item)} />
         )}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color="#0000ff" />
+            </View>
+          ) : null
+        }
       />
     </View>
   );
@@ -69,5 +94,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: 20,
     color: '#333',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
 });
