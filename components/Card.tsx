@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { DisneyCharacter } from '../services/api';
+import { DisneyCharacter } from '../types';
 
 interface CardProps {
   character: DisneyCharacter;

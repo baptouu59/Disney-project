@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { DisneyCharacter } from '../services/api';
+import { DisneyCharacter } from '../types';
 
 type RootStackParamList = {
   Home: undefined;
