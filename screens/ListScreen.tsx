@@ -17,7 +17,8 @@ type ListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'H
 export default function ListScreen() {
   const [characters, setCharacters] = useState<DisneyCharacter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const navigation = useNavigation<ListScreenNavigationProp>();
 
   const filteredCharacters = useMemo(() => {
@@ -29,12 +30,26 @@ export default function ListScreen() {
 
   useEffect(() => {
     const loadCharacters = async () => {
-      const data = await fetchDisneyCharacters();
+      const data = await fetchDisneyCharacters(1);
       setCharacters(data);
       setLoading(false);
     };
     loadCharacters();
   }, []);
+
+  const handleLoadMore = async () => {
+    if (isFetchingMore) return;
+
+    setIsFetchingMore(true);
+    const nextPage = page + 1;
+    const data = await fetchDisneyCharacters(nextPage);
+
+    if (data.length > 0) {
+      setCharacters((prev) => [...prev, ...data]);
+      setPage(nextPage);
+    }
+    setIsFetchingMore(false);
+  };
 
   const handleCardPress = (character: DisneyCharacter) => {
     navigation.navigate('Disneys', { character });
@@ -53,15 +68,17 @@ export default function ListScreen() {
       <Text style={styles.title}>Disney Characters</Text>
       <SearchBar value={searchText} onChangeText={setSearchText} />
       <FlatList
-        data={filteredCharacters}
-        keyExtractor={(item) => item._id.toString()}
+        data={characters}
+        keyExtractor={(item, index) => `${item._id}-${index}`}
         renderItem={({ item }) => (
           <Card character={item} onPress={() => handleCardPress(item)} />
         )}
-        ListEmptyComponent={
-          searchText.trim() ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Aucun personnage trouvé</Text>
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="small" color="#0000ff" />
             </View>
           ) : null
         }
@@ -87,14 +104,8 @@ const styles = StyleSheet.create({
     margin: 20,
     color: '#333',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  footerLoader: {
+    paddingVertical: 20,
     alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
   },
 });
