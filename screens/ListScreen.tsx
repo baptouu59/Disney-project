@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, FlatList, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../components/Card';
+import SearchBar from '../components/SearchBar';
 import { fetchDisneyCharacters } from '../services/api';
 import { DisneyCharacter } from '../types';
 
@@ -19,6 +20,13 @@ export default function ListScreen() {
   const [page, setPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const navigation = useNavigation<ListScreenNavigationProp>();
+
+  const filteredCharacters = useMemo(() => {
+    if (!searchText.trim()) return characters;
+    return characters.filter((char) =>
+      char.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [characters, searchText]);
 
   useEffect(() => {
     const loadCharacters = async () => {
@@ -58,6 +66,7 @@ export default function ListScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Disney Characters</Text>
+      <SearchBar value={searchText} onChangeText={setSearchText} />
       <FlatList
         data={characters}
         keyExtractor={(item, index) => `${item._id}-${index}`}

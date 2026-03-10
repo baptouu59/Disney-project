@@ -3,6 +3,7 @@ import ListScreen from '../screens/ListScreen';
 import DetailScreen from '../screens/DetailScreen';
 import { DisneyCharacter } from '../types';
 
+
 export type RootStackParamList = {
   Home: undefined;
   Disneys: { character: DisneyCharacter };
