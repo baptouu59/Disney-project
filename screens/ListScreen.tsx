@@ -3,7 +3,8 @@ import { View, FlatList, Text, StyleSheet, ActivityIndicator } from 'react-nativ
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Card from '../components/Card';
-import { fetchDisneyCharacters, DisneyCharacter } from '../services/api';
+import { fetchDisneyCharacters } from '../services/api';
+import { DisneyCharacter } from '../types';
 
 type RootStackParamList = {
   Home: undefined;
