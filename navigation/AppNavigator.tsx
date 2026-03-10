@@ -1,3 +1,4 @@
+// navigation/AppNavigator.tsx
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ListScreen from '../screens/ListScreen';
 import DetailScreen from '../screens/DetailScreen';
@@ -12,7 +13,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Home">
+    <Stack.Navigator
+      initialRouteName="Home"
+      screenOptions={{ headerShown: false }}
+    >
       <Stack.Screen name="Home" component={ListScreen} />
       <Stack.Screen name="Disneys" component={DetailScreen} />
     </Stack.Navigator>
